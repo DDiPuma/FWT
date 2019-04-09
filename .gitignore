@@ -1,0 +1,7 @@
+# Don't track these folders
+.idea/
+.ipynb_checkpoints/
+__pycache__/
+
+# Compiled
+*.pyc
