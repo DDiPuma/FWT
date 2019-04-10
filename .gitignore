@@ -5,3 +5,6 @@ __pycache__/
 
 # Compiled
 *.pyc
+
+# Images
+.png
