@@ -1,12 +1,10 @@
-from itertools import repeat
 from math import ceil, log
+
+import numpy as np
+
 
 def pairs(arr):
     return zip(arr[::2], arr[1::2])
-
-
-def transpose(matrix):
-    return [list(col) for col in zip(*matrix)]
 
 
 def zero_pad(signal):
@@ -16,5 +14,5 @@ def zero_pad(signal):
     if len(signal) == 2**power:
         return signal
     else:
-        return signal + list(repeat(0, 2**power - len(signal)))
+        return np.concatenate(signal, np.zeros((2**power - len(signal), 1)))
 
