@@ -25,8 +25,57 @@ def fast_1d_haar_transform(signal):
     return a
 
 
+# Heavily based on Wavelets Made Easy, Algorithm 1.16
+def inplace_fast_1d_haar_transform(signal):
+    n = int(log(len(signal), 2))
+    s = zero_pad(signal)
+    
+    I = 1
+    J = 2
+    M = int(2**n)
+    
+    for L in range(1, n+1):
+        M = M//2
+        for K in range(M):
+            a = (s[J*K] + s[J*K+I]) / 2
+            c = (s[J*K] - s[J*K+I]) / 2
+            s[J*K] = a
+            s[J*K+I] = c
+        I = J
+        J = 2*J
+        
+    return s
+
+# Heavily based on Wavelets Made Easy, Algorithm 1.19
+def inplace_inverse_fast_1d_haar_transform(signal):
+    n = int(log(len(signal), 2))
+    s = zero_pad(signal)
+    
+    I = int(2**(n-1))
+    J = 2*I
+    M = 1
+    
+    for L in range(n+1, 1, -1):
+        for K in range(M):
+            a1 = s[J*K] + s[J*K+I]
+            a2 = s[J*K] - s[J*K+I]
+            s[J*K] = a1
+            s[J*K+I] = a2
+        J = I
+        I = I//2
+        M = 2*M
+
+    return s
+
+
 def fast_2d_haar_transform(matrix):
     first_transform = np.array([fast_1d_haar_transform(row) for row in matrix])
     second_transform_T = [fast_1d_haar_transform(col) for col in first_transform.T]
+    return np.array(second_transform_T).T
+
+
+def inplace_fast_2d_haar_transform(matrix):
+    first_transform = np.array([inplace_fast_1d_haar_transform(row) for row in matrix])
+    second_transform_T = [inplace_fast_1d_haar_transform(col) for col in first_transform.T]
     return np.array(second_transform_T).T
 
