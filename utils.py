@@ -16,3 +16,11 @@ def zero_pad(signal):
     else:
         return np.concatenate(signal, np.zeros((2**power - len(signal), 1)))
 
+"""
+https://wiki.python.org/moin/NumericAndScientificRecipes
+Find 2^n that is equal to or greater than.
+"""
+def nextpow2(i):
+    n = 1
+    while n < i: n *= 2
+    return n
