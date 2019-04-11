@@ -28,20 +28,17 @@ def fast_1d_haar_transform(signal):
 
 # Heavily based on Wavelets Made Easy, Algorithm 1.16
 def inplace_fast_1d_haar_transform(signal):
-    n = int(log(len(signal), 2))
     s = zero_pad(signal)
+    n = int(log(len(s), 2))
 
     I = 1
     J = 2
-    M = int(2**n)
+    M = len(s)
 
     for _ in range(n):
-        M = M//2
+        M = M // 2
         for K in range(M):
-            a = (s[J*K] + s[J*K+I]) / 2
-            c = (s[J*K] - s[J*K+I]) / 2
-            s[J*K] = a
-            s[J*K+I] = c
+            s[J*K], s[J*K+I] = (s[J*K] + s[J*K+I]) / 2, (s[J*K] - s[J*K+I]) / 2
         I = J
         J *= 2
 
@@ -49,19 +46,17 @@ def inplace_fast_1d_haar_transform(signal):
 
 # Heavily based on Wavelets Made Easy, Algorithm 1.19
 def inplace_inverse_fast_1d_haar_transform(signal):
-    n = int(log(len(signal), 2))
     s = zero_pad(signal)
 
-    I = int(2**(n-1))
-    J = 2*I
+    n = int(log(len(s), 2))
+
+    J = len(s)
+    I = J // 2
     M = 1
 
-    for _ in range(n, 0, -1):
+    for _ in range(n):
         for K in range(M):
-            a1 = s[J*K] + s[J*K+I]
-            a2 = s[J*K] - s[J*K+I]
-            s[J*K] = a1
-            s[J*K+I] = a2
+            s[J*K], s[J*K+I] = s[J*K] + s[J*K+I], s[J*K] - s[J*K+I]
         J = I
         I = I//2
         M *= 2
