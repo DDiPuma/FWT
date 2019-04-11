@@ -71,9 +71,26 @@ def fast_2d_haar_transform(matrix):
 
 
 def inplace_fast_2d_haar_transform(matrix):
+    if matrix.shape[0] == 1:
+        return matrix
+
     first_transform = np.array([inplace_fast_1d_haar_transform(row) for row in matrix])
+    print(first_transform)
+    print(first_transform.T)
     second_transform_T = np.array([inplace_fast_1d_haar_transform(col) for col in first_transform.T])
-    return second_transform_T.T
+    print(second_transform_T)
+    print(second_transform_T.T)
+    transform = second_transform_T.T
+
+    print(transform)
+
+    # Recurse on the top left corner
+    corner_len = matrix.shape[0] // 2
+
+    transform[:corner_len, :corner_len] = \
+        inplace_fast_2d_haar_transform(transform[:corner_len, :corner_len])
+
+    return transform
 
 
 def inplace_inverse_fast_2d_haar_transform(matrix):
@@ -96,4 +113,14 @@ def haar_matrix(N):
         top = np.kron(haar_matrix(N-1), np.array([1, 1]))
         bottom = np.kron(np.identity(2**(N-1)), np.array([1, -1]))
         return np.vstack((top, bottom))
+
+@lru_cache(20)
+def haar_transform_matrix(N):
+    H = haar_matrix(N)
+    H_normalized = H[:, :]
+    for idx in range(H.shape[0]):
+        row = H[idx, :]
+        scale = np.linalg.norm(row, ord=2) 
+        H_normalized[idx, :] = row / scale
+    return np.matrix(H_normalized)
 
