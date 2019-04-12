@@ -139,14 +139,14 @@ def matrix_1d_haar_transform(signal):
     s = zero_pad(signal)
     N = int(log(len(s), 2))
 
-    return s @ haar_transform_matrix(N)
+    return haar_transform_matrix(N) @ s[:, None]
 
 
 def matrix_inverse_1d_haar_transform(signal):
     s = zero_pad(signal)
     N = int(log(len(s), 2))
 
-    return s @ haar_transform_matrix(N).T
+    return  haar_transform_matrix(N).T @ s
 
 
 def matrix_2d_haar_transform(signal):
