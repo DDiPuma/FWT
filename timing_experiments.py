@@ -9,15 +9,15 @@ def one_dim_forward_benchmark():
     ordered_timings = []
     inplace_timings = []
     matrix_timings = []
-    data_sizes = [1024, 2048, 4096, 8192, 16384, 32768]
+    data_sizes = [1024, 2048, 4096, 8192]
     for data_size in data_sizes:
         data_array = list(range(data_size))
-        ordered_timer = timeit.Timer(functools.partial(ordered_fast_1d_haar_transform, data_array[:], 0, len(data_array) - 1))
-        ordered_timings.append(ordered_timer.timeit(5))
-        inplace_timer = timeit.Timer(functools.partial(inplace_timings, data_array[:]))
-        inplace_timings.append(inplace_timer.timeit(5))
-        matrix_timer = timeit.Timer(functools.partial(matrix_1d_haar_transform, data_array[:], 0, len(data_array)))
-        matrix_timings.append(matrix_timer.timeit(5))
+        ordered_timer = timeit.Timer(functools.partial(ordered_fast_1d_haar_transform, data_array[:]))
+        ordered_timings.append(ordered_timer.timeit(1))
+        inplace_timer = timeit.Timer(functools.partial(inplace_fast_1d_haar_transform, data_array[:]))
+        inplace_timings.append(inplace_timer.timeit(1))
+        matrix_timer = timeit.Timer(functools.partial(matrix_1d_haar_transform, data_array[:]))
+        matrix_timings.append(matrix_timer.timeit(1))
 
     columns = ('Ordered Haar Transform Runtime', 'In-Place Haar Transform Runtime', 'Matrix Haar Transform Runtime')
     rows = ["Input Length = {}".format(x) for x in data_sizes]
@@ -51,3 +51,7 @@ def one_dim_forward_benchmark():
 
     fig.set_size_inches(w=12, h=10)
     plt.show()
+
+
+if __name__ == '__main__':
+    one_dim_forward_benchmark()
