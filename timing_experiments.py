@@ -13,11 +13,11 @@ def one_dim_forward_benchmark():
     for data_size in data_sizes:
         data_array = list(range(data_size))
         ordered_timer = timeit.Timer(functools.partial(ordered_fast_1d_haar_transform, data_array[:]))
-        ordered_timings.append(ordered_timer.timeit(1))
+        ordered_timings.append(ordered_timer.timeit(3))
         inplace_timer = timeit.Timer(functools.partial(inplace_fast_1d_haar_transform, data_array[:]))
-        inplace_timings.append(inplace_timer.timeit(1))
+        inplace_timings.append(inplace_timer.timeit(3))
         matrix_timer = timeit.Timer(functools.partial(matrix_1d_haar_transform, data_array[:]))
-        matrix_timings.append(matrix_timer.timeit(1))
+        matrix_timings.append(matrix_timer.timeit(3))
 
     columns = ('Ordered Haar Transform Runtime', 'In-Place Haar Transform Runtime', 'Matrix Haar Transform Runtime')
     rows = ["Input Length = {}".format(x) for x in data_sizes]
