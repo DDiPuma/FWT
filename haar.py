@@ -7,12 +7,12 @@ from utils import nextpow2, pairs, zero_pad
 
 
 # Heavily based on Wavelets Made Easy
-def fast_1d_haar_transform(signal):
+def ordered_fast_1d_haar_transform(signal):
     s = zero_pad(signal)
     num_sweeps = int(log(len(signal), 2))
 
-    a = s[:]
-    new_a = s[:]
+    a = s.copy()
+    new_a = s.copy()
 
     for _ in range(num_sweeps):
         calculations = [((first+second)/2, (first-second)/2)
@@ -24,6 +24,32 @@ def fast_1d_haar_transform(signal):
         a[len(new_a):len(new_a)+len(c)] = c[:]
 
     return a
+
+
+def ordered_inverse_fast_1d_haar_transform(signal):
+    # TODO - reverse engineer the inverse
+    s = zero_pad(signal)
+    num_sweeps = int(log(len(signal), 2))
+
+    a = s.copy()
+    new_a = s.copy()
+
+    for _ in range(num_sweeps):
+        calculations = [((first+second)/2, (first-second)/2)
+                        for first, second in pairs(new_a)]
+        new_a, c = zip(*calculations)
+        new_a = np.array(new_a)
+        c = np.array(c)
+        a[:len(new_a)] = new_a[:]
+        a[len(new_a):len(new_a)+len(c)] = c[:]
+
+    return a
+
+
+def ordered_fast_2d_haar_transform(matrix):
+    first_transform = np.array([ordered_fast_1d_haar_transform(row.copy()) for row in matrix])
+    second_transform_T = np.array([ordered_fast_1d_haar_transform(col.copy()) for col in first_transform.T])
+    return second_transform_T.T
 
 
 # Heavily based on Wavelets Made Easy, Algorithm 1.16
@@ -64,38 +90,20 @@ def inplace_inverse_fast_1d_haar_transform(signal):
     return s
 
 
-def fast_2d_haar_transform(matrix):
-    first_transform = np.array([fast_1d_haar_transform(row) for row in matrix])
-    second_transform_T = np.array([fast_1d_haar_transform(col) for col in first_transform.T])
-    return second_transform_T.T
-
-
 def inplace_fast_2d_haar_transform(matrix):
     if matrix.shape[0] == 1:
-        return matrix
+        return matrix.copy()
 
-    first_transform = np.array([inplace_fast_1d_haar_transform(row) for row in matrix])
-    print(first_transform)
-    print(first_transform.T)
-    second_transform_T = np.array([inplace_fast_1d_haar_transform(col) for col in first_transform.T])
-    print(second_transform_T)
-    print(second_transform_T.T)
+    first_transform = np.array([inplace_fast_1d_haar_transform(row.copy()) for row in matrix])
+    second_transform_T = np.array([inplace_fast_1d_haar_transform(col.copy()) for col in first_transform.T])
     transform = second_transform_T.T
-
-    print(transform)
-
-    # Recurse on the top left corner
-    corner_len = matrix.shape[0] // 2
-
-    transform[:corner_len, :corner_len] = \
-        inplace_fast_2d_haar_transform(transform[:corner_len, :corner_len])
 
     return transform
 
 
 def inplace_inverse_fast_2d_haar_transform(matrix):
-    first_transform = np.array([inplace_inverse_fast_1d_haar_transform(row) for row in matrix])
-    second_transform_T = np.array([inplace_inverse_fast_1d_haar_transform(col) for col in first_transform.T])
+    first_transform = np.array([inplace_inverse_fast_1d_haar_transform(row.copy()) for row in matrix])
+    second_transform_T = np.array([inplace_inverse_fast_1d_haar_transform(col.copy()) for col in first_transform.T])
     return second_transform_T.T
 
 
@@ -114,8 +122,10 @@ def haar_matrix(N):
         bottom = np.kron(np.identity(2**(N-1)), np.array([1, -1]))
         return np.vstack((top, bottom))
 
+
 @lru_cache(20)
 def haar_transform_matrix(N):
+    # Just normalize the Haar matrix
     H = haar_matrix(N)
     H_normalized = H[:, :]
     for idx in range(H.shape[0]):

@@ -12,7 +12,7 @@ def zero_pad(signal):
     power = ceil(power)
 
     if len(signal) == 2**power:
-        return signal
+        return signal.copy()
     else:
         return np.concatenate(signal, np.zeros((2**power - len(signal), 1)))
 
