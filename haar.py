@@ -132,25 +132,21 @@ def haar_transform_matrix(N):
         row = H[idx, :]
         scale = np.linalg.norm(row, ord=2) 
         H_normalized[idx, :] = row / scale
-    return np.matrix(H_normalized)
+    return H_normalized
 
 
 def matrix_1d_haar_transform(signal):
     s = zero_pad(signal)
     N = int(log(len(s), 2))
 
-    s = np.atleast_2d(s)
-
-    return np.squeeze(np.array(haar_transform_matrix(N)*s.T))
+    return s @ haar_transform_matrix(N)
 
 
 def matrix_inverse_1d_haar_transform(signal):
     s = zero_pad(signal)
     N = int(log(len(s), 2))
 
-    s = np.atleast_2d(s)
-
-    return np.squeeze(np.array(haar_transform_matrix(N).T*s.T))
+    return s @ haar_transform_matrix(N).T
 
 
 def matrix_2d_haar_transform(signal):
@@ -158,7 +154,7 @@ def matrix_2d_haar_transform(signal):
 
     H = haar_transform_matrix(N)
 
-    return np.array(H*signal*H.T)
+    return H @ signal @ H.T
 
 
 def matrix_inverse_2d_haar_transform(signal):
@@ -166,5 +162,5 @@ def matrix_inverse_2d_haar_transform(signal):
 
     H = haar_transform_matrix(N)
 
-    return np.array(H.T*signal*H)
+    return H.T @ signal @ H
 
