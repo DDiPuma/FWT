@@ -19,6 +19,10 @@ def one_dim_forward_benchmark():
     inplace_time_maxes = []
     matrix_time_maxes = []
 
+    ordered_time_std_devs = []
+    inplace_time_std_devs = []
+    matrix_time_std_devs = []
+
     data_sizes = [2**N for N in range(1, 13)]
 
     for data_size in data_sizes:
@@ -47,7 +51,9 @@ def one_dim_forward_benchmark():
         ordered_time_mins.append(min(ordered_timings))
         inplace_time_mins.append(min(inplace_timings))
         matrix_time_mins.append(min(matrix_timings))
-        
+        ordered_time_std_devs.append(np.std(ordered_timings))
+        inplace_time_std_devs.append(np.std(inplace_timings))
+        matrix_time_std_devs.append(np.std(matrix_timings))
 
     columns = ('Ordered Haar Transform Runtime', 'In-Place Haar Transform Runtime', 'Matrix Haar Transform Runtime')
     rows = ["Input Length = {}".format(x) for x in data_sizes]
