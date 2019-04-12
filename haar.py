@@ -9,7 +9,7 @@ from utils import nextpow2, pairs, zero_pad
 # Heavily based on Wavelets Made Easy
 def ordered_fast_1d_haar_transform(signal):
     s = zero_pad(signal)
-    num_sweeps = int(log(len(signal), 2))
+    num_sweeps = int(log(len(s), 2))
 
     a = s.copy()
     new_a = s.copy()
@@ -29,7 +29,7 @@ def ordered_fast_1d_haar_transform(signal):
 def ordered_inverse_fast_1d_haar_transform(signal):
     # TODO - reverse engineer the inverse
     s = zero_pad(signal)
-    num_sweeps = int(log(len(signal), 2))
+    num_sweeps = int(log(len(s), 2))
 
     a = s.copy()
     new_a = s.copy()
@@ -84,7 +84,7 @@ def inplace_inverse_fast_1d_haar_transform(signal):
         for K in range(M):
             s[J*K], s[J*K+I] = s[J*K] + s[J*K+I], s[J*K] - s[J*K+I]
         J = I
-        I = I//2
+        I = I // 2
         M *= 2
 
     return s
@@ -107,7 +107,7 @@ def inplace_inverse_fast_2d_haar_transform(matrix):
     return second_transform_T.T
 
 
-HAAR_MATRIX_2x2 = np.array([[1, 1], [1, -1]])
+HAAR_MATRIX_2x2 = np.array([[1, 1], [1, -1]], dtype=float)
 
 """
 https://www.mathworks.com/matlabcentral/fileexchange/45247-code-for-generating-haar-matrix?fbclid=IwAR3iNpupw8mx7l763E8RDpyQdkmj7TGKOpJAs3FMfTCRa0Fh85AAQ_aUbV0
@@ -118,8 +118,8 @@ def haar_matrix(N):
     if N == 1:
         return HAAR_MATRIX_2x2
     else:
-        top = np.kron(haar_matrix(N-1), np.array([1, 1]))
-        bottom = np.kron(np.identity(2**(N-1)), np.array([1, -1]))
+        top = np.kron(haar_matrix(N-1), np.array([1, 1], dtype=float))
+        bottom = np.kron(np.identity(2**(N-1)), np.array([1, -1], dtype=float))
         return np.vstack((top, bottom))
 
 
@@ -127,10 +127,44 @@ def haar_matrix(N):
 def haar_transform_matrix(N):
     # Just normalize the Haar matrix
     H = haar_matrix(N)
-    H_normalized = H[:, :]
+    H_normalized = H.copy()
     for idx in range(H.shape[0]):
         row = H[idx, :]
         scale = np.linalg.norm(row, ord=2) 
         H_normalized[idx, :] = row / scale
     return np.matrix(H_normalized)
+
+
+def matrix_1d_haar_transform(signal):
+    s = zero_pad(signal)
+    N = int(log(len(s), 2))
+
+    s = np.atleast_2d(s)
+
+    return np.squeeze(np.array(haar_transform_matrix(N)*s.T))
+
+
+def matrix_inverse_1d_haar_transform(signal):
+    s = zero_pad(signal)
+    N = int(log(len(s), 2))
+
+    s = np.atleast_2d(s)
+
+    return np.squeeze(np.array(haar_transform_matrix(N).T*s.T))
+
+
+def matrix_2d_haar_transform(signal):
+    N = int(log(signal.shape[0], 2))
+
+    H = haar_transform_matrix(N)
+
+    return np.array(H*signal*H.T)
+
+
+def matrix_inverse_2d_haar_transform(signal):
+    N = int(log(signal.shape[0], 2))
+
+    H = haar_transform_matrix(N)
+
+    return np.array(H.T*signal*H)
 
