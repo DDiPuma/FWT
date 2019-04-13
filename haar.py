@@ -3,7 +3,7 @@ from math import log
 
 import numpy as np
 
-from utils import nextpow2, pairs, zero_pad
+from utils import nextpow2, pairs, strided_pair_indices, zero_pad
 
 
 # Heavily based on Wavelets Made Easy
@@ -27,21 +27,25 @@ def ordered_fast_1d_haar_transform(signal):
 
 
 def ordered_inverse_fast_1d_haar_transform(signal):
-    # TODO - reverse engineer the inverse
     s = zero_pad(signal)
     num_sweeps = int(log(len(s), 2))
 
     a = s.copy()
-    new_a = s.copy()
 
-    for _ in range(num_sweeps):
-        calculations = [((first+second)/2, (first-second)/2)
-                        for first, second in pairs(new_a)]
-        new_a, c = zip(*calculations)
-        new_a = np.array(new_a)
-        c = np.array(c)
-        a[:len(new_a)] = new_a[:]
-        a[len(new_a):len(new_a)+len(c)] = c[:]
+    # This algorithm starts by modifying 2 entries, then 4, then 8, and so on
+    # The new entries are sums and differences of pairs of elements
+    # BUT the pairs of elements are strided apart
+    # The stride is 1, 2, 4, ...
+    for stride_pow in range(num_sweeps):
+        stride = 2**stride_pow
+        size_a = 2*stride
+        new_a = a[:size_a].copy()
+        new_a_const = a[:size_a].copy()
+
+        for i, j in strided_pair_indices(stride):
+            new_a[i], new_a[i+stride] = new_a_const[i]+new_a_const[j], new_a_const[i]-new_a_const[j]
+
+        a[:size_a] = new_a[:]
 
     return a
 
