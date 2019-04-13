@@ -23,7 +23,7 @@ def one_dim_forward_benchmark():
     inplace_time_std_devs = []
     matrix_time_std_devs = []
 
-    data_sizes = [2**N for N in range(1, 13)]
+    data_sizes = [2**N for N in range(1, 14)]
 
     for data_size in data_sizes:
         ordered_timings = []
@@ -51,9 +51,9 @@ def one_dim_forward_benchmark():
         ordered_time_mins.append(min(ordered_timings))
         inplace_time_mins.append(min(inplace_timings))
         matrix_time_mins.append(min(matrix_timings))
-        ordered_time_std_devs.append(np.std(ordered_timings))
-        inplace_time_std_devs.append(np.std(inplace_timings))
-        matrix_time_std_devs.append(np.std(matrix_timings))
+        ordered_time_std_devs.append(np.std(np.log2(ordered_timings)))
+        inplace_time_std_devs.append(np.std(np.log2(inplace_timings)))
+        matrix_time_std_devs.append(np.std(np.log2(matrix_timings)))
 
     columns = ('Ordered Haar Transform Runtime', 'In-Place Haar Transform Runtime', 'Matrix Haar Transform Runtime')
     rows = ["Input Length = {}".format(x) for x in data_sizes]
@@ -66,9 +66,9 @@ def one_dim_forward_benchmark():
     fig.subplots_adjust(left=0.2, top=0.8, wspace=1)
 
     plt.subplot(211)
-    plt.plot(np.log2(data_sizes), np.log2(ordered_time_averages), "b-", label="ordered (fast)")
-    plt.plot(np.log2(data_sizes), np.log2(inplace_time_averages), "r-", label="inplace (fast)")
-    plt.plot(np.log2(data_sizes), np.log2(matrix_time_averages), "k-", label="matrix (slow)")
+    plt.errorbar(np.log2(data_sizes), np.log2(ordered_time_averages), yerr=ordered_time_std_devs, fmt="b-", label="ordered (fast)")
+    plt.errorbar(np.log2(data_sizes), np.log2(inplace_time_averages), yerr=inplace_time_std_devs, fmt="r-", label="inplace (fast)")
+    plt.errorbar(np.log2(data_sizes), np.log2(matrix_time_averages), yerr=matrix_time_std_devs, fmt="k-", label="matrix (slow)")
     plt.xlabel("$log_2$ size (Length of Input Array)")
     plt.ylabel("$log_2$ time (s)")
     plt.legend()
