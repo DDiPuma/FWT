@@ -3,7 +3,7 @@ from math import log
 
 import numpy as np
 
-from utils import nextpow2, pairs, strided_pair_indices, zero_pad
+from utils import nextpow2, pairs, zero_pad
 
 
 # Heavily based on Wavelets Made Easy
@@ -40,10 +40,9 @@ def ordered_inverse_fast_1d_haar_transform(signal):
         stride = 2**stride_pow
         size_a = 2*stride
         new_a = a[:size_a].copy()
-        new_a_const = a[:size_a].copy()
 
-        for i, j in strided_pair_indices(stride):
-            new_a[i], new_a[i+stride] = new_a_const[i]+new_a_const[j], new_a_const[i]-new_a_const[j]
+        for i in range(stride):
+            new_a[2*i], new_a[2*i+1] = a[i]+a[i+stride], a[i]-a[i+stride]
 
         a[:size_a] = new_a[:]
 
@@ -53,6 +52,12 @@ def ordered_inverse_fast_1d_haar_transform(signal):
 def ordered_fast_2d_haar_transform(matrix):
     first_transform = np.array([ordered_fast_1d_haar_transform(row.copy()) for row in matrix])
     second_transform_T = np.array([ordered_fast_1d_haar_transform(col.copy()) for col in first_transform.T])
+    return second_transform_T.T
+
+
+def ordered_inverse_fast_2d_haar_transform(matrix):
+    first_transform = np.array([ordered_inverse_fast_1d_haar_transform(row.copy()) for row in matrix])
+    second_transform_T = np.array([ordered_inverse_fast_1d_haar_transform(col.copy()) for col in first_transform.T])
     return second_transform_T.T
 
 

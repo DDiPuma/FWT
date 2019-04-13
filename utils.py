@@ -7,10 +7,6 @@ def pairs(arr):
     return zip(arr[::2], arr[1::2])
 
 
-def strided_pair_indices(stride):
-    return [(i, i+stride) for i in range(stride)]
-
-
 def zero_pad(signal):
     power = log(len(signal), 2)
     power = ceil(power)
