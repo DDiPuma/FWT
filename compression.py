@@ -37,17 +37,17 @@ class HaarImageCompressor:
         # Intended to count the nonzero elements in the wavelet coefficients
         uncompressed_nonzero = np.count_nonzero(abs(self.wavelet_coefficients) != 0)
         error_tolerance = .02*self.target_compression_ratio
-        threshold = np.percentile(self.wavelet_coefficients, 100/self.target_compression_ratio)
+        threshold = np.percentile(self.wavelet_coefficients, 100/self.target_compression_ratio if self.target_compression_ratio != 0 else 1)
 
         if self.target_compression_ratio == 0:
+            print("boosh")
             self.actual_compression_ratio = 0
             self.compressed_image = getattr(haar, self.inverse_transform_dict[self.compression_method])(self.wavelet_coefficients)
             return
         else:
             while True:
-
                 # Intended to count the elements in the wavelet coefficients above the zeroing threshold
-                compressed_nonzero = np.count_nonzero(abs(self.wavelet_coefficients) >= abs(threshold))
+                compressed_nonzero = np.count_nonzero(abs(self.wavelet_coefficients) >= abs(threshold)) + 1
                 temp_compression_ratio = uncompressed_nonzero/compressed_nonzero
 
                 # Check if we are within an allowed error tolerance

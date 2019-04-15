@@ -4,6 +4,7 @@ import timeit
 import matplotlib.pyplot as plt
 
 from haar import *
+import compression
 
 
 def one_dim_forward_benchmark():
@@ -278,6 +279,7 @@ def fast_one_dim_inverse_benchmark():
     fig.set_size_inches(w=12, h=10)
     plt.show()
 
+
 def two_dim_forward_benchmark():
     ordered_time_averages = []
     inplace_time_averages = []
@@ -427,13 +429,62 @@ def two_dim_inverse_benchmark():
     fig.set_size_inches(w=12, h=10)
     plt.show()
 
+
+def compression_benchmark():
+    matrix_time_averages = []
+    matrix_time_mins = []
+    matrix_time_maxes = []
+    matrix_time_std_devs = []
+
+    data_sizes = [2**N for N in range(6, 12)]
+
+    for data_size in data_sizes:
+        matrix_timings = []
+
+        for trial in range(3):
+            data_array = np.random.randint(256, size=(data_size, data_size)).astype(np.float32)
+            compressor = compression.HaarImageCompressor(compression_method="ordered", target_compression_ratio=0)
+            compressor.uncompressed_image = data_array
+
+            matrix_timer = timeit.Timer(functools.partial(compressor.compress_image))
+            matrix_timings.append(matrix_timer.timeit(1))
+
+        matrix_time_averages.append(np.mean(matrix_timings))
+        matrix_time_maxes.append(max(matrix_timings))
+        matrix_time_mins.append(min(matrix_timings))
+        matrix_time_std_devs.append(np.std(np.log2(matrix_timings)))
+
+    columns = 'Compression Runtime'
+    rows = ["Input Size = {} by {}".format(x, x) for x in data_sizes]
+    cell_text = []
+    for time_tuple in zip(matrix_time_averages):
+        cell_text.append(["{} seconds".format(time_data) for time_data in time_tuple])
+
+    fig = plt.figure(1)
+    plt.suptitle("Compression Runtimes")
+    fig.subplots_adjust(left=0.2, top=0.8, wspace=1)
+
+    plt.subplot(211)
+    plt.errorbar(np.log2(data_sizes), np.log2(matrix_time_averages), yerr=matrix_time_std_devs, fmt="k-", label="matrix (slow)")
+    plt.xlabel("$log_2$ N (for N x N Input Matrix)")
+    plt.ylabel("$log_2$ time (s)")
+    plt.legend()
+
+    ax = plt.subplot(212)
+    ax.table(cellText=cell_text, rowLabels=rows, colLabels=columns, loc='upper center')
+    ax.axis("off")
+
+    fig.set_size_inches(w=12, h=10)
+    plt.show()
+
     
 if __name__ == '__main__':
-    one_dim_forward_benchmark()
-    fast_one_dim_forward_benchmark()
-    one_dim_inverse_benchmark()
-    fast_one_dim_inverse_benchmark()
-    two_dim_forward_benchmark()
-    fast_two_dim_forward_benchmark()
-    two_dim_inverse_benchmark()
-    fast_two_dim_inverse_benchmark()
+    # one_dim_forward_benchmark()
+    # fast_one_dim_forward_benchmark()
+    # one_dim_inverse_benchmark()
+    # fast_one_dim_inverse_benchmark()
+    # two_dim_forward_benchmark()
+    # fast_two_dim_forward_benchmark()
+    # two_dim_inverse_benchmark()
+    # fast_two_dim_inverse_benchmark()
+    compression_benchmark()
