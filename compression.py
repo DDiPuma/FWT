@@ -36,11 +36,10 @@ class HaarImageCompressor:
         self.wavelet_coefficients = getattr(haar, self.forward_transform_dict[self.compression_method])(self.uncompressed_image)
         # Intended to count the nonzero elements in the wavelet coefficients
         uncompressed_nonzero = np.count_nonzero(abs(self.wavelet_coefficients) != 0)
-        error_tolerance = .02*self.target_compression_ratio
+        error_tolerance = .1*self.target_compression_ratio
         threshold = np.percentile(self.wavelet_coefficients, 100/self.target_compression_ratio if self.target_compression_ratio != 0 else 1)
 
         if self.target_compression_ratio == 0:
-            print("boosh")
             self.actual_compression_ratio = 0
             self.compressed_image = getattr(haar, self.inverse_transform_dict[self.compression_method])(self.wavelet_coefficients)
             return
@@ -61,23 +60,29 @@ class HaarImageCompressor:
                     self.compressed_image = getattr(haar, self.inverse_transform_dict[self.compression_method])(self.wavelet_coefficients)
                     break
                 elif self.target_compression_ratio > temp_compression_ratio:
-                    threshold = threshold - .01*self.target_compression_ratio
+                    threshold = threshold - .05*self.target_compression_ratio
                 elif self.target_compression_ratio < temp_compression_ratio:
-                    threshold = threshold + .01*self.target_compression_ratio
+                    threshold = threshold + .05*self.target_compression_ratio
 
 
 def compressor_test():
     import matplotlib.pyplot as plt
-    compressor = HaarImageCompressor(compression_method="matrix", target_compression_ratio=300)
+
+    compressor = HaarImageCompressor(compression_method="matrix", target_compression_ratio=0)
     compressor.load_image("cam.png")
-    compressor.compress_image()
 
     plt.imshow(compressor.uncompressed_image, cmap='gray')
     plt.title("Uncompressed")
     plt.show()
-    plt.imshow(compressor.compressed_image, cmap='gray')
-    plt.title("Compressed, compression ratio of {:.2f}".format(compressor.actual_compression_ratio))
-    plt.show()
+    # plt.savefig("{}.png".format(0))
+
+    for cr in [2, 4, 8, 15, 25, 50, 100, 250, 500, 1000]:
+        compressor.select_target_compression_ratio(cr)
+        compressor.compress_image()
+        plt.imshow(compressor.compressed_image, cmap='gray')
+        plt.title("Compressed, compression ratio of {:.2f}".format(compressor.actual_compression_ratio))
+        plt.show()
+        # plt.savefig("{}.png".format(cr))
 
 
 if __name__ == '__main__':
