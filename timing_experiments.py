@@ -436,7 +436,7 @@ def compression_benchmark():
     matrix_time_maxes = []
     matrix_time_std_devs = []
 
-    data_sizes = [2**N for N in range(6, 12)]
+    data_sizes = [2**N for N in range(6, 11)]
 
     for data_size in data_sizes:
         matrix_timings = []
@@ -455,7 +455,7 @@ def compression_benchmark():
         matrix_time_std_devs.append(np.std(np.log2(matrix_timings)))
 
     columns = 'Compression Runtime'
-    rows = ["Input Size = {} by {}".format(x, x) for x in data_sizes]
+    rows = ["N = {} pixels".format(x*x) for x in data_sizes]
     cell_text = []
     for time_tuple in zip(matrix_time_averages):
         cell_text.append(["{} seconds".format(time_data) for time_data in time_tuple])
@@ -463,10 +463,10 @@ def compression_benchmark():
     fig = plt.figure(1)
     plt.suptitle("Compression Runtimes")
     fig.subplots_adjust(left=0.2, top=0.8, wspace=1)
-
+    data_sizes = [(2**N)**2 for N in range(6, 11)]
     plt.subplot(211)
-    plt.errorbar(np.log2(data_sizes), np.log2(matrix_time_averages), yerr=matrix_time_std_devs, fmt="k-", label="matrix (slow)")
-    plt.xlabel("$log_2$ N (for N x N Input Matrix)")
+    plt.errorbar(np.log2(data_sizes), np.log2(matrix_time_averages), yerr=matrix_time_std_devs, fmt="k-", label="Compression using Ordered FWT")
+    plt.xlabel("$log_2$ N")
     plt.ylabel("$log_2$ time (s)")
     plt.legend()
 
