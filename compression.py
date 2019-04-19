@@ -32,7 +32,7 @@ class HaarImageCompressor:
     def select_target_compression_ratio(self, compression_ratio):
         self.target_compression_ratio = compression_ratio
 
-    def compress_image(self):
+    def compress_image_bad(self):
         self.wavelet_coefficients = getattr(haar, self.forward_transform_dict[self.compression_method])(self.uncompressed_image)
         # Intended to count the nonzero elements in the wavelet coefficients
         uncompressed_nonzero = np.count_nonzero(abs(self.wavelet_coefficients) != 0)
@@ -63,6 +63,26 @@ class HaarImageCompressor:
                     threshold = threshold - .05*self.target_compression_ratio
                 elif self.target_compression_ratio < temp_compression_ratio:
                     threshold = threshold + .05*self.target_compression_ratio
+
+    def compress_image(self):
+        self.wavelet_coefficients = getattr(haar, self.forward_transform_dict[self.compression_method])(
+            self.uncompressed_image)
+
+        if self.target_compression_ratio == 0:
+            self.actual_compression_ratio = 0
+            self.compressed_image = getattr(haar, self.inverse_transform_dict[self.compression_method])(
+                self.wavelet_coefficients)
+            return
+
+        uncompressed_nonzero = np.count_nonzero(abs(self.wavelet_coefficients) != 0)
+        target_nonzero = uncompressed_nonzero//self.target_compression_ratio
+        threshold = np.partition(self.wavelet_coefficients[:], int(target_nonzero), None)[target_nonzero]
+        compressed_nonzero = np.count_nonzero(self.wavelet_coefficients >= abs(threshold))
+
+        self.actual_compression_ratio = uncompressed_nonzero/compressed_nonzero
+        self.wavelet_coefficients[abs(self.wavelet_coefficients) < abs(threshold)] = 0
+        self.compressed_image = getattr(haar, self.inverse_transform_dict[self.compression_method])(
+            self.wavelet_coefficients)
 
 
 def compressor_test():
