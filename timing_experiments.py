@@ -431,15 +431,23 @@ def two_dim_inverse_benchmark():
 
 
 def compression_benchmark():
-    matrix_time_averages = []
-    matrix_time_mins = []
-    matrix_time_maxes = []
-    matrix_time_std_devs = []
+    ordered_time_averages = []
+    inplace_time_averages = []
+
+    ordered_time_mins = []
+    inplace_time_mins = []
+
+    ordered_time_maxes = []
+    inplace_time_maxes = []
+
+    ordered_time_std_devs = []
+    inplace_time_std_devs = []
 
     data_sizes = [2**N for N in range(6, 11)]
 
     for data_size in data_sizes:
-        matrix_timings = []
+        ordered_timings = []
+        inplace_timings = []
 
         for trial in range(3):
             data_array = np.random.randint(256, size=(data_size, data_size)).astype(np.float32)
@@ -447,27 +455,107 @@ def compression_benchmark():
             compressor.uncompressed_image = data_array
 
             matrix_timer = timeit.Timer(functools.partial(compressor.compress_image))
-            matrix_timings.append(matrix_timer.timeit(1))
+            ordered_timings.append(matrix_timer.timeit(1))
+            compressor.compression_method = "inplace"
+            matrix_timer = timeit.Timer(functools.partial(compressor.compress_image))
+            inplace_timings.append(matrix_timer.timeit(1))
 
-        matrix_time_averages.append(np.mean(matrix_timings))
-        matrix_time_maxes.append(max(matrix_timings))
-        matrix_time_mins.append(min(matrix_timings))
-        matrix_time_std_devs.append(np.std(np.log2(matrix_timings)))
+        ordered_time_averages.append(np.mean(ordered_timings))
+        inplace_time_averages.append(np.mean(inplace_timings))
+        ordered_time_maxes.append(max(ordered_timings))
+        inplace_time_maxes.append(max(inplace_timings))
+        ordered_time_mins.append(min(ordered_timings))
+        inplace_time_mins.append(min(inplace_timings))
+        ordered_time_std_devs.append(np.std(np.log2(ordered_timings)))
+        inplace_time_std_devs.append(np.std(np.log2(inplace_timings)))
 
-    columns = 'Compression Runtime'
-    rows = ["N = {} pixels".format(x*x) for x in data_sizes]
+    data_sizes = [(2**N)**2 for N in range(6, 11)]
+
+    columns = ('Ordered Haar Transform Runtime', 'In-Place Haar Transform Runtime')
+    rows = ["Number of Pixels (N) = {}".format(x) for x in data_sizes]
     cell_text = []
-    for time_tuple in zip(matrix_time_averages):
+    for time_tuple in zip(ordered_time_averages, inplace_time_averages):
         cell_text.append(["{} seconds".format(time_data) for time_data in time_tuple])
 
     fig = plt.figure(1)
-    plt.suptitle("Compression Runtimes")
+    plt.suptitle("Image Compression Runtimes")
     fig.subplots_adjust(left=0.2, top=0.8, wspace=1)
-    data_sizes = [(2**N)**2 for N in range(6, 11)]
+
     plt.subplot(211)
-    plt.errorbar(np.log2(data_sizes), np.log2(matrix_time_averages), yerr=matrix_time_std_devs, fmt="k-", label="Compression using Ordered FWT")
-    plt.xlabel("$log_2$ N")
+    plt.errorbar(np.log2(data_sizes), np.log2(ordered_time_averages), yerr=ordered_time_std_devs, fmt="b-",
+                 label="Transform method = ordered")
+    plt.errorbar(np.log2(data_sizes), np.log2(inplace_time_averages), yerr=inplace_time_std_devs, fmt="r-",
+                 label="Transform method =  inplace")
+
+    plt.xlabel("$log_2$ N (number of pixels)")
     plt.ylabel("$log_2$ time (s)")
+    plt.legend()
+
+    ax = plt.subplot(212)
+    ax.table(cellText=cell_text, rowLabels=rows, colLabels=columns, loc='upper center')
+    ax.axis("off")
+
+    fig.set_size_inches(w=12, h=10)
+    plt.show()
+
+
+def compression_ratio_benchmark():
+    ordered_time_averages = []
+    inplace_time_averages = []
+
+    ordered_time_mins = []
+    inplace_time_mins = []
+
+    ordered_time_maxes = []
+    inplace_time_maxes = []
+
+    ordered_time_std_devs = []
+    inplace_time_std_devs = []
+
+    data_sizes = [2 ** N for N in range(0, 11)]
+
+    for data_size in data_sizes:
+        print(data_size)
+        ordered_timings = []
+        inplace_timings = []
+
+        for trial in range(10):
+            compressor = compression.HaarImageCompressor(compression_method="ordered", target_compression_ratio=data_size)
+            compressor.load_image("cam.png")
+
+            matrix_timer = timeit.Timer(functools.partial(compressor.compress_image))
+            ordered_timings.append(matrix_timer.timeit(1))
+            compressor.compression_method = "inplace"
+            matrix_timer = timeit.Timer(functools.partial(compressor.compress_image))
+            inplace_timings.append(matrix_timer.timeit(1))
+
+        ordered_time_averages.append(np.mean(ordered_timings))
+        inplace_time_averages.append(np.mean(inplace_timings))
+        ordered_time_maxes.append(max(ordered_timings))
+        inplace_time_maxes.append(max(inplace_timings))
+        ordered_time_mins.append(min(ordered_timings))
+        inplace_time_mins.append(min(inplace_timings))
+        ordered_time_std_devs.append(np.std(np.log2(ordered_timings)))
+        inplace_time_std_devs.append(np.std(np.log2(inplace_timings)))
+
+    columns = ('Compression w/ Ordered Haar Transform Runtime', 'Compression w/ In-Place Haar Transform Runtime')
+    rows = ["Target Compression Ratio = {}".format(x) for x in data_sizes]
+    cell_text = []
+    for time_tuple in zip(ordered_time_averages, inplace_time_averages):
+        cell_text.append(["{} seconds".format(time_data) for time_data in time_tuple])
+
+    fig = plt.figure(1)
+    plt.suptitle("Image Compression Runtimes")
+    fig.subplots_adjust(left=0.2, top=0.8, wspace=1)
+
+    plt.subplot(211)
+    plt.errorbar(data_sizes, ordered_time_averages, yerr=ordered_time_std_devs, fmt="b-",
+                 label="Transform method = ordered")
+    plt.errorbar(data_sizes, inplace_time_averages, yerr=inplace_time_std_devs, fmt="r-",
+                 label="Transform method =  inplace")
+
+    plt.xlabel("Compression Ratio")
+    plt.ylabel("time (s)")
     plt.legend()
 
     ax = plt.subplot(212)
@@ -487,4 +575,6 @@ if __name__ == '__main__':
     # fast_two_dim_forward_benchmark()
     # two_dim_inverse_benchmark()
     # fast_two_dim_inverse_benchmark()
-    compression_benchmark()
+    # compression_benchmark()
+    compression_ratio_benchmark()
+

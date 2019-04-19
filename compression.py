@@ -96,7 +96,7 @@ def compressor_test():
     plt.show()
     # plt.savefig("{}.png".format(0))
 
-    for cr in [2, 4, 8, 15, 25, 50, 100, 250, 500, 1000]:
+    for cr in [2, 10, 100, 1000]:
         compressor.select_target_compression_ratio(cr)
         compressor.compress_image()
         plt.imshow(compressor.compressed_image, cmap='gray')
