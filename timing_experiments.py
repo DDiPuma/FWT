@@ -631,6 +631,26 @@ def iterative_vs_recursive_haar():
     fig.set_size_inches(w=12, h=10)
     plt.show()
 
+
+def plot_haar_vectors():
+    matrix = haar_matrix(3)
+    fig, ax = plt.subplots(4, 2)
+
+    for i, (row, x,y) in enumerate(zip(matrix,[0,1,2,3,0,1,2,3],[0,0,0,0,1,1,1,1])):
+        print(row)
+        ax[x,y].set_title("Vector {}".format(i))
+        ax[x,y].plot(row, drawstyle='steps-pre')
+    plt.suptitle("Haar Wavelets in $R^8$")
+    plt.show()
+    # ax[0, 0].plot(range(10), 'b') #row=0, col=0
+    # ax[1, 0].plot(range(10), 'b') #row=1, col=0
+    # ax[2, 0].plot(range(10), 'b') #row=1, col=0
+    # ax[3, 0].plot(range(10), 'b') #row=1, col=0
+    # ax[0, 1].plot(range(10), 'b') #row=0, col=1
+    # ax[1, 1].plot(range(10), 'b') #row=1, col=1
+    # ax[2, 1].plot(range(10), 'b') #row=1, col=1
+    # ax[3, 1].plot(range(10), 'b') #row=1, col=1
+
     
 if __name__ == '__main__':
     # one_dim_forward_benchmark()
@@ -643,5 +663,5 @@ if __name__ == '__main__':
     # fast_two_dim_inverse_benchmark()
     # compression_benchmark()
     # compression_ratio_benchmark()
-    iterative_vs_recursive_haar()
-
+    # iterative_vs_recursive_haar()
+    plot_haar_vectors()

@@ -8,3 +8,6 @@ __pycache__/
 
 # Images
 *.png
+
+# Spreadsheets
+*.csv
