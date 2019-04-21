@@ -565,6 +565,72 @@ def compression_ratio_benchmark():
     fig.set_size_inches(w=12, h=10)
     plt.show()
 
+
+def iterative_vs_recursive_haar():
+    iterative_time_averages = []
+    recursive_time_averages = []
+
+    iterative_time_mins = []
+    recursive_time_mins = []
+
+    iterative_time_maxes = []
+    recursive_time_maxes = []
+
+    iterative_time_std_devs = []
+    recursive_time_std_devs = []
+
+    data_sizes = [N for N in range(1, 14)]
+
+    for data_size in data_sizes:
+        iterative_timings = []
+        recursive_timings = []
+
+        for trial in range(2):
+            data_array = np.random.randint(256, size=2**data_size).astype(np.float32)
+
+            matrix_timer = timeit.Timer(functools.partial(matrix_1d_haar_transform, data_array))
+            recursive_timings.append(matrix_timer.timeit(3))
+
+            matrix_timer = timeit.Timer(functools.partial(haar_matrix_old, 2**data_size))
+            iterative_timings.append(matrix_timer.timeit(3))
+
+
+        iterative_time_averages.append(np.mean(iterative_timings))
+        recursive_time_averages.append(np.mean(recursive_timings))
+        iterative_time_maxes.append(max(iterative_timings))
+        recursive_time_maxes.append(max(recursive_timings))
+        iterative_time_mins.append(min(iterative_timings))
+        recursive_time_mins.append(min(recursive_timings))
+        iterative_time_std_devs.append(np.std(np.log2(iterative_timings)))
+        recursive_time_std_devs.append(np.std(np.log2(recursive_timings)))
+
+    columns = ('Recursive Matrix Generation', 'Iterative Matrix Generation')
+    rows = ["Matrix Size = N x N = {} x {}".format(2**x, 2**x) for x in data_sizes]
+    cell_text = []
+    for time_tuple in zip(recursive_time_averages, iterative_time_averages):
+        cell_text.append(["{} seconds".format(time_data) for time_data in time_tuple])
+
+    fig = plt.figure(1)
+    plt.suptitle("Matrix Generation Runtimes")
+    fig.subplots_adjust(left=0.2, top=0.8, wspace=1)
+
+    plt.subplot(211)
+    plt.errorbar(data_sizes, np.log2(recursive_time_averages), yerr=recursive_time_std_devs, fmt="b-",
+                 label="Recursive")
+    plt.errorbar(data_sizes, np.log2(iterative_time_averages), yerr=iterative_time_std_devs, fmt="r-",
+                 label="Iterative")
+
+    plt.xlabel("N")
+    plt.ylabel("time (s)")
+    plt.legend()
+
+    ax = plt.subplot(212)
+    ax.table(cellText=cell_text, rowLabels=rows, colLabels=columns, loc='upper center')
+    ax.axis("off")
+
+    fig.set_size_inches(w=12, h=10)
+    plt.show()
+
     
 if __name__ == '__main__':
     # one_dim_forward_benchmark()
@@ -576,5 +642,6 @@ if __name__ == '__main__':
     # two_dim_inverse_benchmark()
     # fast_two_dim_inverse_benchmark()
     # compression_benchmark()
-    compression_ratio_benchmark()
+    # compression_ratio_benchmark()
+    iterative_vs_recursive_haar()
 

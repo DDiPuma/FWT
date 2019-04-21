@@ -115,6 +115,43 @@ def inplace_inverse_fast_2d_haar_transform(matrix):
     second_transform_T = np.array([inplace_inverse_fast_1d_haar_transform(col) for col in first_transform.T])
     return second_transform_T.T
 
+"""
+https://www.mathworks.com/matlabcentral/fileexchange/45247-code-for-generating-haar-matrix?fbclid=IwAR3iNpupw8mx7l763E8RDpyQdkmj7TGKOpJAs3FMfTCRa0Fh85AAQ_aUbV0
+Input: N must be a power of 2
+Output: NxN Haar matrix
+"""
+def haar_matrix_old(N):
+    p = [0, 0]
+    q = [0, 1]
+    n = nextpow2(N)
+
+    i = 1
+    while len(p) < N+1:
+        p.extend(2**i*[i])
+        i += 1
+    i = 1
+    while len(q) < N+1:
+        t = list(range(1, (2**i)+1))
+        q.extend(t)
+        i += 1
+
+    Hr = [[0 for _ in range(N)] for _ in range(N)]
+    Hr[0][:] = N*[1]
+
+    for i in range(1, N):
+        P = p[i]
+        Q = q[i]
+        for j in range(int((N*(Q-1)/(2**P))), int(N*((Q-0.5)/(2**P)))):
+            Hr[i][j] = 2**(P/2)
+        for j in range(int(N*((Q-0.5)/(2**P))), int(N*(Q/(2**P)))):
+            Hr[i][j] = -(2**(P/2))
+
+    # print(Hr) # Easier to look at version
+    # import numpy
+    # numpy.savetxt("foo{}.csv".format(N), Hr, delimiter=",")
+    Hr = [[i*(N**-.5) for i in j] for j in Hr]
+    return Hr
+
 
 HAAR_MATRIX_2x2 = np.array([[1, 1], [1, -1]], dtype=float)
 
@@ -130,36 +167,6 @@ def haar_matrix(N):
         bottom = np.kron(np.identity(2**(N-1)), np.array([1, -1], dtype=float))
         return np.vstack((top, bottom))
 
-
-"""
-https://www.mathworks.com/matlabcentral/fileexchange/45247-code-for-generating-haar-matrix?fbclid=IwAR3iNpupw8mx7l763E8RDpyQdkmj7TGKOpJAs3FMfTCRa0Fh85AAQ_aUbV0
-Input: N must be a power of 2
-Output: NxN Haar matrix
-"""
-def haar_matrix_old(N):
-    p = [0, 0]
-    q = [0, 1]
-    n = nextpow2(N)
-
-    for i in range(1, n-2):
-        p.extend(2**i*[i])
-        t = list(range(1, 2**i+1))
-        q.extend(t)
-
-    Hr = [[0 for _ in range(N)] for _ in range(N)]
-    Hr[0][:] = N*[1]
-
-    for i in range(1, N):
-        P = p[i]
-        Q = q[i]
-        for j in range(int((N*(Q-1)/(2**P))), int(N*((Q-0.5)/(2**P)))):
-            Hr[i][j] = 2**(P/2)
-        for j in range(int(N*((Q-0.5)/(2**P))), int(N*(Q/(2**P)))):
-            Hr[i][j] = -(2**(P/2))
-
-#     print(Hr) # Easier to look at version
-    Hr = [[i*(N**-.5) for i in j] for j in Hr]
-    return Hr
 
 @lru_cache(20)
 def haar_transform_matrix(N):
