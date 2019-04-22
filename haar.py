@@ -8,9 +8,19 @@ from utils import nextpow2, pairs, zero_pad
 
 # Heavily based on Wavelets Made Easy
 def ordered_fast_1d_haar_transform(signal):
+    """
+    Calculate the (ordered) 1D Haar transform of a signal.
+
+    Notes
+    -----
+    - Copies the signal before operating on it.
+    - Be sure to invert it using the ordered algorithm.
+    - If the signal is not length power of two, it will be zero padded.
+
+    """
+    # Set up overhead variables
     s = zero_pad(signal)
     num_sweeps = int(log(len(s), 2))
-
     a = s.copy()
     new_a = s.copy()
 
@@ -20,6 +30,7 @@ def ordered_fast_1d_haar_transform(signal):
         new_a, c = zip(*calculations)
         new_a = np.array(new_a)
         c = np.array(c)
+        # New signal is [a, c]
         a[:len(new_a)] = new_a[:]
         a[len(new_a):len(new_a)+len(c)] = c[:]
 
@@ -27,9 +38,18 @@ def ordered_fast_1d_haar_transform(signal):
 
 
 def ordered_inverse_fast_1d_haar_transform(signal):
+    """
+    Calculate the (ordered) inverse 1D Haar transform of a signal.
+
+    Notes
+    -----
+    - Copies the signal before operating on it.
+    - Be sure that the signal was produced using the ordered algorithm.
+    - If the signal is not length power of two, it will be zero padded.
+
+    """
     s = zero_pad(signal)
     num_sweeps = int(log(len(s), 2))
-
     a = s.copy()
 
     # This algorithm starts by modifying 2 entries, then 4, then 8, and so on
@@ -50,19 +70,50 @@ def ordered_inverse_fast_1d_haar_transform(signal):
 
 
 def ordered_fast_2d_haar_transform(matrix):
+    """Extend the ordered Haar transform into 2 dimensions.
+
+    Notes
+    -----
+    - Behavior becomes undefined if the lengths is not power of two.
+    - Inversion should be performed with the ordered algorithm.
+
+    """
+    # Operate on rows
     first_transform = np.array([ordered_fast_1d_haar_transform(row) for row in matrix])
+    # Then on columns, by abusing transposes
     second_transform_T = np.array([ordered_fast_1d_haar_transform(col) for col in first_transform.T])
     return second_transform_T.T
 
 
 def ordered_inverse_fast_2d_haar_transform(matrix):
+    """Extend the inverse ordered Haar transform into 2 dimensions.
+
+    Notes
+    -----
+    - Behavior becomes undefined if the lengths is not power of two.
+    - Ensure that forward transform was performed with the ordered algorithm.
+
+    """
+    # Operate on rows
     first_transform = np.array([ordered_inverse_fast_1d_haar_transform(row) for row in matrix])
+    # Then on columns
     second_transform_T = np.array([ordered_inverse_fast_1d_haar_transform(col) for col in first_transform.T])
     return second_transform_T.T
 
 
 # Heavily based on Wavelets Made Easy, Algorithm 1.16
 def inplace_fast_1d_haar_transform(signal):
+    """
+    Calculate the (inplace) 1D Haar transform of a signal.
+
+    Notes
+    -----
+    - Copies the signal before operating on it.
+    - Be sure to invert it using the inplace algorithm.
+    - If the signal is not length power of two, it will be zero padded.
+
+    """
+    # Set up overhead variables
     s = zero_pad(signal)
     n = int(log(len(s), 2))
 
@@ -70,6 +121,7 @@ def inplace_fast_1d_haar_transform(signal):
     J = 2
     M = len(s)
 
+    # Perform algorithm described by text
     for _ in range(n):
         M = M // 2
         for K in range(M):
@@ -81,6 +133,17 @@ def inplace_fast_1d_haar_transform(signal):
 
 # Heavily based on Wavelets Made Easy, Algorithm 1.19
 def inplace_inverse_fast_1d_haar_transform(signal):
+    """
+    Calculate the (inplace) inverse 1D Haar transform of a signal.
+
+    Notes
+    -----
+    - Copies the signal before operating on it.
+    - Be sure that the signal was produced using the inplace algorithm.
+    - If the signal is not length power of two, it will be zero padded.
+
+    """
+    # Set up overhead variables
     s = zero_pad(signal)
 
     n = int(log(len(s), 2))
@@ -89,6 +152,7 @@ def inplace_inverse_fast_1d_haar_transform(signal):
     I = J // 2
     M = 1
 
+    # Perform the algorithm described in the text
     for _ in range(n):
         for K in range(M):
             s[J*K], s[J*K+I] = s[J*K] + s[J*K+I], s[J*K] - s[J*K+I]
@@ -100,10 +164,20 @@ def inplace_inverse_fast_1d_haar_transform(signal):
 
 
 def inplace_fast_2d_haar_transform(matrix):
+    """Extend the inplace Haar transform into 2 dimensions.
+
+    Notes
+    -----
+    - Behavior becomes undefined if the lengths is not power of two.
+    - Inversion should be performed with the inplace algorithm.
+
+    """
     if matrix.shape[0] == 1:
         return matrix.copy()
 
+    # Work on rows
     first_transform = np.array([inplace_fast_1d_haar_transform(row) for row in matrix])
+    # Work on columns
     second_transform_T = np.array([inplace_fast_1d_haar_transform(col) for col in first_transform.T])
     transform = second_transform_T.T
 
@@ -111,16 +185,26 @@ def inplace_fast_2d_haar_transform(matrix):
 
 
 def inplace_inverse_fast_2d_haar_transform(matrix):
+    """Extend the inverse inplace Haar transform into 2 dimensions.
+
+    Notes
+    -----
+    - Behavior becomes undefined if the lengths is not power of two.
+    - Ensure that forward transform was performed with the inplace algorithm.
+
+    """
+    # Work on rows
     first_transform = np.array([inplace_inverse_fast_1d_haar_transform(row) for row in matrix])
+    # Work on columns
     second_transform_T = np.array([inplace_inverse_fast_1d_haar_transform(col) for col in first_transform.T])
     return second_transform_T.T
 
-"""
-https://www.mathworks.com/matlabcentral/fileexchange/45247-code-for-generating-haar-matrix?fbclid=IwAR3iNpupw8mx7l763E8RDpyQdkmj7TGKOpJAs3FMfTCRa0Fh85AAQ_aUbV0
-Input: N must be a power of 2
-Output: NxN Haar matrix
-"""
 def haar_matrix_old(N):
+    """
+    https://www.mathworks.com/matlabcentral/fileexchange/45247-code-for-generating-haar-matrix?fbclid=IwAR3iNpupw8mx7l763E8RDpyQdkmj7TGKOpJAs3FMfTCRa0Fh85AAQ_aUbV0
+    Input: N must be a power of 2
+    Output: NxN Haar matrix
+    """
     p = [0, 0]
     q = [0, 1]
     n = nextpow2(N)
@@ -155,11 +239,9 @@ def haar_matrix_old(N):
 
 HAAR_MATRIX_2x2 = np.array([[1, 1], [1, -1]], dtype=float)
 
-"""
-Output: 2**Nx2**N Haar matrix
-"""
 @lru_cache(20)
 def haar_matrix(N):
+    """Recursively produce the 2**N by 2**N Haar matrix."""
     if N == 1:
         return HAAR_MATRIX_2x2
     else:
@@ -170,6 +252,8 @@ def haar_matrix(N):
 
 @lru_cache(20)
 def haar_transform_matrix(N):
+    """Produce the 2**N by 2**N Haar transform matrix by normalizing the Haar
+    matrix."""
     # Just normalize the Haar matrix
     H = haar_matrix(N)
     H_normalized = H.copy()
@@ -181,6 +265,7 @@ def haar_transform_matrix(N):
 
 
 def matrix_1d_haar_transform(signal):
+    """Use matrix multiplication to calculate a Haar transform."""
     s = zero_pad(signal)
     N = int(log(len(s), 2))
 
@@ -188,6 +273,7 @@ def matrix_1d_haar_transform(signal):
 
 
 def matrix_inverse_1d_haar_transform(signal):
+    """Use matrix multiplication to calculate an inverse Haar transform."""
     s = zero_pad(signal)
     N = int(log(len(s), 2))
 
@@ -195,6 +281,7 @@ def matrix_inverse_1d_haar_transform(signal):
 
 
 def matrix_2d_haar_transform(signal):
+    """Use matrix multiplication to calculate a 2D Haar transform."""
     N = int(log(signal.shape[0], 2))
 
     H = haar_transform_matrix(N)
@@ -203,6 +290,7 @@ def matrix_2d_haar_transform(signal):
 
 
 def matrix_inverse_2d_haar_transform(signal):
+    """Use matrix multiplication to calculate a 2D inverse Haar transform."""
     N = int(log(signal.shape[0], 2))
 
     H = haar_transform_matrix(N)
